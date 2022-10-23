@@ -1,0 +1,112 @@
+go atlas
+
+
+
+
+#-----------------------------------
+# SECTION 1: Mesh Specification
+#-----------------------------------
+
+mesh three.d
+
+x.mesh	l=0		s=6
+x.mesh	l=20		s=6
+x.mesh	l=30		s=4
+x.mesh	l=34		s=2
+x.mesh	l=40		s=4
+x.mesh	l=55		s=4
+x.mesh	l=61		s=4
+x.mesh	l=65		s=6
+x.mesh l=75             s=6
+x.mesh l=95             s=6
+
+y.mesh        loc=-0.1                s=0.1
+y.mesh        loc=0                   s=0.05
+y.mesh        loc=0.065               s=0.1
+y.mesh        loc=0.865               s=0.01
+y.mesh        loc=1.365               s=0.01
+
+z.mesh        l=0            s=6
+z.mesh        l=16            s=6
+z.mesh        l=24            s=4
+z.mesh        l=27           s=2
+z.mesh        l=32            s=5
+z.mesh        l=44            s=2
+z.mesh        l=49           s=1
+z.mesh        l=52           s=6
+z.mesh        l=59           s=6
+z.mesh        l=75           s=6
+
+
+#-----------------------------------
+# SECTION 2: Structure Specification
+#-----------------------------------
+
+#-----------------------------------
+# Regions definition
+#-----------------------------------
+region num=1 name=etch       material=air  	     		              y.max=0 	              x.min=0 x.max=95 z.min=0       z.max=75     
+region num=2 name=P       material=InGaAs  	x.comp=0.47     		y.min=0    y.max=0.065 	       x.min=30       x.max=65     z.min=24      z.max=52
+region num=3 name=I       material=InGaAs    	x.comp=0.47    		y.min=0.065   y.max=0.865    x.min=30       x.max=65     z.min=24      z.max=52
+region num=4 name=N       material=InGaAs    	x.comp=0.47    		y.min=0.865   y.max=1.365    x.min=0 x.max=95 z.min=0       z.max=75     
+region num=5	name=etch		material=air					y.min=0 	y.max=0.865	x.min=0       x.max=30     z.min=0       z.max=75 
+region num=6	name=etch		material=air					y.min=0 	y.max=0.865	x.min=65       x.max=95     z.min=0       z.max=75
+region num=7	name=etch		material=air					y.min=0 	y.max=0.865	x.min=30       x.max=65     z.min=0       z.max=24
+region num=8	name=etch		material=air					y.min=0 	y.max=0.865	x.min=30       x.max=65     z.min=52       z.max=75
+
+#---------------------------------
+# Electrodes
+#---------------------------------
+electrode	num=1	name=anode    material=Gold		x.min=34 	x.max=61    z.min=27       z.max=32      y.min=-0.1         y.max=0
+electrode	num=2	name=anode	material=Gold	       x.min=34 	x.max=61    z.min=44       z.max=49      y.min=-0.1         y.max=0
+electrode	num=3	name=anode    material=Gold		x.min=55 	x.max=61    z.min=27       z.max=49      y.min=-0.1         y.max=0
+electrode	num=4	name=anode	material=Gold	       x.min=34 	x.max=40    z.min=27       z.max=49      y.min=-0.1         y.max=0
+electrode	num=5	name=cathode	material=Gold	x.min=0 	x.max=95    z.min=0       z.max=16         y.min=0.765     y.max=0.865
+electrode	num=6	name=cathode	material=Gold  	x.min=0 	x.max=95    z.min=59      z.max=75         y.min=0.765     y.max=0.865
+electrode	num=7	name=cathode	material=Gold  	x.min=0 	x.max=20    z.min=0       z.max=75         y.min=0.765     y.max=0.865
+electrode	num=8	name=cathode	material=Gold  	x.min=75	x.max=95    z.min=0       z.max=75         y.min=0.765     y.max=0.865
+
+#--------------------------------
+# Doping
+#--------------------------------
+doping Region=2 uniform       p.type        conc=2.5e19
+doping Region=3 uniform       n.type        conc=1e14
+doping Region=4 uniform       n.type        conc=1e19    
+contact name=anode  
+contact name=cathode 
+#save outf=pindiode_0.str
+#tonyplot3d pindiode_0.str
+#quit
+
+#--------------------------
+#Contacts
+#--------------------------
+material material=InGaAs permittivity=13.9      nc300=2.06e17 nv300=7.81e+18    ni.min=7.55e+11  me.tunnel=0.042  mh.tunnel=0.46 affinity=4.58 NSRHN=9e17 NSRHP=8e17  
+material material=InAlAs permittivity=12.2      nc300=6.09e17 nv300=1.17e+19      ni.min=2.2e+6 me.tunnel=0.0839  mh.tunnel=0.6612    affinity=4.1 NSRHN=1e17 NSRHP=1e17 
+material material=InAlGaAs permittivity=12.4        me.tunnel=0.06 mh.tunnel=0.61    	affinity=4.3        
+
+material  region=2 eg300=0.75      
+material  region=3 eg300=0.75    
+material  region=4 eg300=0.75       
+mobility region=2 mun=2800    mup=80   vsatn=0.2e7 vsatp=0.1e7    
+mobility region=3 mun=11000   mup=330    vsatn=3e7 vsatp=2e7  
+mobility region=4 mun=3000    mup=80    vsatn=0.2e7 vsatp=0.1e7
+
+models fermi srh  prints 
+method bicgst gummel newton climit=1e-4 itlimit=20   maxtrap=40
+
+solve init
+solve prev
+
+output t.quantum band.param qfn qfp val.band con.band charge polar.charge e.mobility h.mobility e.velocity h.velocity
+
+save outf=PINdiode.str
+tonyplot3d PINdiode.str
+log outf=PINdiode.log
+
+solve vanode=0 vstep=-0.25 vfinal=-20 name=anode
+#solve vanode=0 vstep=0.1 vfinal=0.82 name=anode
+
+log off 
+tonyplot PINdiode.log
+quit
